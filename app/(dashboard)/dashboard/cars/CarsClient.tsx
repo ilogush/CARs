@@ -49,6 +49,8 @@ export default function CarsClient({
         return tab as TabType
       }
     }
+    // Default to inventory if looking at specific company
+    if (companyId) return 'inventory'
     return 'templates'
   })
   const [refreshKey, setRefreshKey] = useState(0)
@@ -313,7 +315,7 @@ export default function CarsClient({
   }
 
   // Determine available tabs based on role and mode
-  const isOwnerView = userRole === 'owner' || userRole === 'manager'
+  const isOwnerView = userRole === 'owner' || userRole === 'manager' || (isAdminMode && !!companyId)
 
   const getPhotoUrl = (photo: string | null | undefined, carId?: number) => {
     if (!photo) return null
@@ -590,7 +592,7 @@ export default function CarsClient({
     })
   }
 
-  if (userRole === 'admin') {
+  if (userRole === 'admin' && !companyId) {
     dynamicTabs.push(
       {
         id: 'templates',

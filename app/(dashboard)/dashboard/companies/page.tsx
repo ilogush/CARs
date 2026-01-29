@@ -34,7 +34,12 @@ async function fetchCompanies(params: any) {
     searchParams.set('filters', JSON.stringify(params.filters))
   }
 
-  const response = await fetch(`/api/companies?${searchParams.toString()}`)
+  const response = await fetch(`/api/companies?${searchParams.toString()}`, {
+    headers: {
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache'
+    }
+  })
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
     throw new Error(errorData.error || 'Failed to load data')
@@ -46,8 +51,15 @@ export default function CompaniesPage() {
   const router = useRouter()
   const toast = useToast()
   const [refreshing, setRefreshing] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
+  // Store optimistic states: { [companyId]: boolean }
+  const [optimisticStates, setOptimisticStates] = useState<Record<number, boolean>>({})
 
   const handleToggleActive = async (companyId: number, currentStatus: boolean) => {
+    // 1. Optimistic update
+    const nextStatus = !currentStatus
+    setOptimisticStates(prev => ({ ...prev, [companyId]: nextStatus }))
+
     try {
       setRefreshing(true)
       const response = await fetch(`/api/companies/${companyId}`, {
@@ -56,7 +68,7 @@ export default function CompaniesPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          is_active: !currentStatus
+          is_active: nextStatus
         }),
       })
 
@@ -65,12 +77,18 @@ export default function CompaniesPage() {
         throw new Error(errorData.error || 'Failed to update company status')
       }
 
-      toast.success(`Company ${!currentStatus ? 'activated' : 'deactivated'} successfully`)
-      // Refresh the table
-      window.location.reload()
+      toast.success(`Company ${nextStatus ? 'activated' : 'deactivated'} successfully`)
+      // 2. Trigger table refresh to get real data eventually
+      setRefreshKey(prev => prev + 1)
     } catch (error: any) {
       console.error('Error toggling company status:', error)
       toast.error(error.message || 'Failed to update company status')
+      // 3. Revert optimistic update on error
+      setOptimisticStates(prev => {
+        const newState = { ...prev }
+        delete newState[companyId]
+        return newState
+      })
     } finally {
       setRefreshing(false)
     }
@@ -147,32 +165,40 @@ export default function CompaniesPage() {
       key: 'toggle',
       label: '',
       sortable: false,
-      render: (item) => (
-        <button
-          onClick={() => handleToggleActive(item.id, item.is_active ?? true)}
-          disabled={refreshing}
-          className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${item.is_active ? 'bg-gray-800' : 'bg-gray-200'
-            } ${refreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
-          role="switch"
-          aria-checked={item.is_active ?? true}
-        >
-          <span
-            aria-hidden="true"
-            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${item.is_active ? 'translate-x-4' : 'translate-x-0'
-              }`}
-          />
-        </button>
-      )
+      render: (item) => {
+        // Use optimistic state if available, otherwise use item.is_active
+        const isActive = optimisticStates[item.id] !== undefined ? optimisticStates[item.id] : (item.is_active ?? true)
+
+        return (
+          <button
+            onClick={() => handleToggleActive(item.id, isActive)}
+            disabled={refreshing}
+            className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${isActive ? 'bg-gray-800' : 'bg-gray-200'
+              } ${refreshing ? 'opacity-50 cursor-not-allowed' : ''}`}
+            role="switch"
+            aria-checked={isActive}
+          >
+            <span
+              aria-hidden="true"
+              className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isActive ? 'translate-x-4' : 'translate-x-0'
+                }`}
+            />
+          </button>
+        )
+      }
     },
     {
       key: 'is_active',
       label: 'Status',
       sortable: true,
-      render: (item) => (
-        <StatusBadge variant={item.is_active ? 'success' : 'error'}>
-          {item.is_active ? 'active' : 'inactive'}
-        </StatusBadge>
-      )
+      render: (item) => {
+        const isActive = optimisticStates[item.id] !== undefined ? optimisticStates[item.id] : (item.is_active ?? true)
+        return (
+          <StatusBadge variant={isActive ? 'success' : 'error'}>
+            {isActive ? 'active' : 'inactive'}
+          </StatusBadge>
+        )
+      }
     }
   ]
 
@@ -188,6 +214,7 @@ export default function CompaniesPage() {
       <DataTable
         columns={columnsWithClick}
         fetchData={fetchCompanies}
+        refreshKey={refreshKey}
       />
     </div>
   )

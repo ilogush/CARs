@@ -20,7 +20,7 @@ import DatePicker from '@/components/ui/DatePicker'
 import { format } from 'date-fns'
 import Toggle from '@/components/ui/Toggle'
 
-type TabType = 'general' | 'schedule' | 'payments' | 'seasons' | 'durations' | 'currencies'
+type TabType = 'general' | 'schedule' | 'payments' | 'currencies'
 
 
 export default function SettingsPage() {
@@ -275,8 +275,6 @@ function SettingsContent() {
     if (canSeeSettings) {
         tabs.push({ id: 'general', label: 'General', icon: Cog6ToothIcon })
         tabs.push({ id: 'schedule', label: 'Schedule', icon: ClockIcon })
-        tabs.push({ id: 'seasons', label: 'Seasons', icon: SunIcon })
-        tabs.push({ id: 'durations', label: 'Durations', icon: CalendarIcon })
         tabs.push({ id: 'currencies', label: 'Currencies', icon: CurrencyDollarIcon })
     }
 
@@ -666,60 +664,10 @@ function SettingsContent() {
 
 
 
-            {/* Seasons Settings Section */}
-            {
-                activeTab === 'seasons' && canSeeSettings && (
-
-                    <SeasonsSettings
-                        company={company}
-                        onSave={async (newSettings) => {
-                            setSaving(true)
-                            try {
-                                const response = await fetch(`/api/companies/${company.id}`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ settings: newSettings })
-                                })
-                                if (!response.ok) throw new Error('Failed to update settings')
-                                setCompany({ ...company, settings: newSettings })
-                            } catch (err: any) {
-                                toast.error(err.message)
-                            } finally {
-                                setSaving(false)
-                            }
-                        }}
-                        saving={saving}
-                    />
-                )
-            }
 
 
-            {/* Durations Settings Section */}
-            {
-                activeTab === 'durations' && canSeeSettings && (
 
-                    <DurationsSettings
-                        company={company}
-                        onSave={async (newSettings) => {
-                            setSaving(true)
-                            try {
-                                const response = await fetch(`/api/companies/${company.id}`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ settings: newSettings })
-                                })
-                                if (!response.ok) throw new Error('Failed to update settings')
-                                setCompany({ ...company, settings: newSettings })
-                            } catch (err: any) {
-                                toast.error(err.message)
-                            } finally {
-                                setSaving(false)
-                            }
-                        }}
-                        saving={saving}
-                    />
-                )
-            }
+
 
             {/* Currencies Settings Section */}
             {

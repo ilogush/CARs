@@ -157,7 +157,7 @@ export default function DataTable<T>({
     if (tabs) {
       return tabs.find(t => t.id === actualActiveTab)?.label || actualActiveTab
     }
-    return title || 'this table'
+    return title || 'data'
   }, [tabs, actualActiveTab, title])
 
   const { data: result, error, isLoading: swrLoading, mutate } = useSWR(

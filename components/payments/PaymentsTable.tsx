@@ -73,7 +73,7 @@ export default function PaymentsTable() {
     const columns: Column<Payment>[] = [
         {
             key: 'id',
-            label: 'ID',
+            label: 'id',
             render: (item) => (
                 <button
                     onClick={() => {
@@ -90,7 +90,7 @@ export default function PaymentsTable() {
         },
         {
             key: 'created_at',
-            label: 'Date',
+            label: 'date',
             sortable: true,
             render: (item) => {
                 const date = item.payment_date || item.created_at
@@ -108,7 +108,7 @@ export default function PaymentsTable() {
         },
         {
             key: 'contract_id',
-            label: 'Contract',
+            label: 'contract',
             render: (item) => (
                 <div className="flex flex-col">
                     <span className="text-sm font-medium text-gray-900">
@@ -122,7 +122,7 @@ export default function PaymentsTable() {
         },
         {
             key: 'payment_type',
-            label: 'Type',
+            label: 'type',
             render: (item) => (
                 <span className="text-sm text-gray-500">
                     {item.payment_types?.name || '-'}
@@ -131,14 +131,14 @@ export default function PaymentsTable() {
         },
         {
             key: 'payment_method',
-            label: 'Method',
+            label: 'method',
             render: (item) => (
                 <span className="text-sm text-gray-500 capitalize">{item.payment_method}</span>
             )
         },
         {
             key: 'status',
-            label: 'Status',
+            label: 'status',
             render: (item) => (
                 <span className="text-sm text-gray-500">
                     {item.payment_statuses.name.toLowerCase()}
@@ -147,7 +147,7 @@ export default function PaymentsTable() {
         },
         {
             key: 'created_by',
-            label: 'Created By',
+            label: 'created by',
             render: (item) => (
                 <span className="text-sm text-gray-500">
                     {item.creator ? `${item.creator.name} ${item.creator.surname}` : '-'}
@@ -156,7 +156,7 @@ export default function PaymentsTable() {
         },
         {
             key: 'amount',
-            label: 'Amount',
+            label: 'amount',
             sortable: true,
             render: (item) => (
                 <span className="text-sm font-bold text-gray-900">

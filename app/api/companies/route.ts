@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { 
-  parsePaginationParams, 
-  createCachedResponse, 
+import {
+  parsePaginationParams,
+  createCachedResponse,
   CACHE_CONFIG,
   PerformanceMonitor
 } from '@/lib/api/performance'
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     let query = supabaseAdmin
       .from('companies')
       .select(`
-        id, name, owner_id, location_id, created_at,
+        id, name, owner_id, location_id, created_at, is_active, email, phone,
         owner:users!owner_id(id, name, surname, email),
         locations(name, districts(name)),
         company_cars(count),
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     if (params.filters.q) {
       query = query.ilike('name', `%${params.filters.q}%`)
     }
-    
+
     Object.entries(params.filters).forEach(([key, value]) => {
       if (key !== 'q' && value) {
         if (key === 'owner_id' || key === 'id' || key === 'location_id') {
