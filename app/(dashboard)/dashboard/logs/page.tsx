@@ -191,6 +191,7 @@ export default function LogsPage() {
   const toast = useToast()
 
   const [isClearing, setIsClearing] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const handleClearLogs = async () => {
     try {
@@ -212,7 +213,8 @@ export default function LogsPage() {
       }
 
       toast.success('Logs cleared successfully')
-      window.location.reload()
+      setRefreshKey(prev => prev + 1)
+      setIsClearing(false)
     } catch (error: any) {
       console.error('Error clearing logs:', error)
       toast.error(error.message || 'Failed to clear logs')
@@ -290,6 +292,7 @@ export default function LogsPage() {
       <DataTable
         columns={columns}
         fetchData={fetchData}
+        refreshKey={refreshKey}
       />
     </div>
   )

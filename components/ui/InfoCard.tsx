@@ -64,7 +64,7 @@ export function InfoCard({
   const currentSize = sizeClasses[size]
 
   const cardContent = (
-    <div className={`bg-white rounded-lg border border-gray-200 ${currentSize} ${className} hover:border-gray-200 transition-colors cursor-pointer`}>
+    <div className={`bg-white/40 backdrop-blur-sm rounded-lg border border-gray-200 ${currentSize} ${className} hover:border-gray-200 transition-colors cursor-pointer`}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-600">{title}</p>

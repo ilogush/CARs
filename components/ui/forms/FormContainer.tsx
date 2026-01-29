@@ -23,7 +23,7 @@ export function FormContainer({
   className = ''
 }: FormContainerProps) {
   return (
-    <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
+    <div className={`bg-white/40 backdrop-blur-sm rounded-lg border border-gray-200 p-6 ${className}`}>
       <h2 className="text-lg font-medium text-gray-900 mb-6">{title}</h2>
       <form onSubmit={onSubmit} className="space-y-4">
         {children}

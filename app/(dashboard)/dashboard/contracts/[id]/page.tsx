@@ -278,10 +278,11 @@ export default function ContractDetailsPage({ params }: { params: Promise<{ id: 
         <CloseContractModal
           contractId={contract.id}
           onClose={() => setShowCloseModal(false)}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowCloseModal(false)
             // Reload page to update status
-            window.location.reload()
+            await new Promise(resolve => setTimeout(resolve, 500))
+            router.refresh()
           }}
         />
       )}

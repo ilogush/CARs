@@ -8,25 +8,23 @@ import { useToast } from '@/lib/toast'
 import Card from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import PageHeader from '@/components/ui/PageHeader'
-
 import Loader from '@/components/ui/Loader'
 
 interface Contract {
   id: number
   total_amount: number
+  company_car_id?: number
   client?: {
     name: string
     surname: string
     email?: string
   }
   company_cars?: {
+    id: number
+    license_plate: string
     car_templates?: {
-      car_brands?: {
-        name: string
-      }
-      car_models?: {
-        name: string
-      }
+      car_brands?: { name: string }
+      car_models?: { name: string }
     }
   }
 }
@@ -36,6 +34,29 @@ interface PaymentStatus {
   name: string
   value: number
   is_active: boolean
+}
+
+interface PaymentType {
+  id: number
+  name: string
+  sign: string
+  is_active: boolean
+}
+
+interface CompanyCar {
+  id: number
+  license_plate: string
+  car_templates?: {
+    car_brands?: { name: string }
+    car_models?: { name: string }
+  }
+}
+
+interface Currency {
+  id: number
+  code: string
+  name: string
+  symbol: string
 }
 
 export default function CreatePaymentPage() {
@@ -49,13 +70,21 @@ export default function CreatePaymentPage() {
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Data sources
   const [contracts, setContracts] = useState<Contract[]>([])
   const [paymentStatuses, setPaymentStatuses] = useState<PaymentStatus[]>([])
+  const [paymentTypes, setPaymentTypes] = useState<PaymentType[]>([])
+  const [companyCars, setCompanyCars] = useState<CompanyCar[]>([])
+  const [currencies, setCurrencies] = useState<Currency[]>([])
 
   // Form state
+  const [autoId, setAutoId] = useState<string>('')
   const [contractId, setContractId] = useState<string>(contractIdParam || '')
   const [paymentStatusId, setPaymentStatusId] = useState<string>('')
+  const [paymentTypeId, setPaymentTypeId] = useState<string>('')
   const [amount, setAmount] = useState<string>('')
+  const [currencyId, setCurrencyId] = useState<string>('')
   const [paymentMethod, setPaymentMethod] = useState<string>('cash')
   const [notes, setNotes] = useState<string>('')
 
@@ -63,23 +92,54 @@ export default function CreatePaymentPage() {
     loadData()
   }, [])
 
+  // Auto-filter/select contract when Auto changes
+  useEffect(() => {
+    if (autoId) {
+      // Try to find a contract for this car? 
+      // Or just filter the contracts dropdown?
+      // For now, let's just use it to potentially filter.
+      // But if user manually selects contract, it overrides.
+      const relatedContract = contracts.find(c => c.company_car_id === parseInt(autoId))
+      if (relatedContract) {
+        setContractId(relatedContract.id.toString())
+      }
+    }
+  }, [autoId, contracts])
+
   async function loadData() {
     try {
       setInitialLoading(true)
-      // Load contracts
-      const contractsUrl = `/api/contracts?page=1&pageSize=1000${adminMode && companyId ? `&admin_mode=true&company_id=${companyId}` : ''}`
-      const contractsRes = await fetch(contractsUrl)
-      const contractsData = await contractsRes.json()
-      if (contractsData.data) {
-        setContracts(contractsData.data)
+      const commonParams = `page=1&pageSize=1000${adminMode && companyId ? `&admin_mode=true&company_id=${companyId}` : ''}`
+
+      // Parallel fetching
+      const [contractsRes, statusesRes, typesRes, carsRes, currenciesRes] = await Promise.all([
+        fetch(`/api/contracts?${commonParams}`),
+        fetch(`/api/payment-statuses?page=1&pageSize=1000`),
+        fetch(`/api/payment-types?page=1&pageSize=1000`),
+        fetch(`/api/company-cars?${commonParams}`),
+        fetch(`/api/currencies?page=1&pageSize=1000`)
+      ])
+
+      const [contractsData, statusesData, typesData, carsData, currenciesData] = await Promise.all([
+        contractsRes.json(),
+        statusesRes.json(),
+        typesRes.json(),
+        carsRes.json(),
+        currenciesRes.json()
+      ])
+
+      if (contractsData.data) setContracts(contractsData.data)
+      if (statusesData.data) setPaymentStatuses(statusesData.data.filter((s: PaymentStatus) => s.is_active))
+      if (typesData.data) setPaymentTypes(typesData.data.filter((t: PaymentType) => t.is_active))
+      if (carsData.data) setCompanyCars(carsData.data)
+      if (currenciesData.data) {
+        setCurrencies(currenciesData.data)
+        // Set default currency mostly likely THB
+        const thb = currenciesData.data.find((c: Currency) => c.code === 'THB')
+        if (thb) setCurrencyId(thb.id.toString())
+        else if (currenciesData.data.length > 0) setCurrencyId(currenciesData.data[0].id.toString())
       }
 
-      // Load payment statuses
-      const statusesRes = await fetch('/api/payment-statuses?page=1&pageSize=1000')
-      const statusesData = await statusesRes.json()
-      if (statusesData.data) {
-        setPaymentStatuses(statusesData.data.filter((s: PaymentStatus) => s.is_active))
-      }
     } catch (error) {
       console.error('Error loading data:', error)
       toast.error('Failed to load form data')
@@ -93,8 +153,11 @@ export default function CreatePaymentPage() {
     setError(null)
     setLoading(true)
 
-    if (!contractId) {
-      setError('Please select a contract')
+    // Validation
+    // Contract is optional per user request
+
+    if (!paymentTypeId) {
+      setError('Please select a payment type')
       setLoading(false)
       return
     }
@@ -111,21 +174,18 @@ export default function CreatePaymentPage() {
       return
     }
 
-    if (!paymentMethod) {
-      setError('Please select a payment method')
-      setLoading(false)
-      return
-    }
-
     try {
       const url = `/api/payments${adminMode && companyId ? `?admin_mode=true&company_id=${companyId}` : ''}`
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contract_id: parseInt(contractId),
+          contract_id: contractId ? parseInt(contractId) : null,
+          company_car_id: autoId ? parseInt(autoId) : null, // If backend supports it
+          payment_type_id: parseInt(paymentTypeId),
           payment_status_id: parseInt(paymentStatusId),
           amount: parseFloat(amount),
+          currency_id: currencyId ? parseInt(currencyId) : null,
           payment_method: paymentMethod,
           notes: notes || null
         })
@@ -155,8 +215,6 @@ export default function CreatePaymentPage() {
     )
   }
 
-  const selectedContract = contracts.find(c => c.id.toString() === contractId)
-
   const backHref = `/dashboard/payments${adminMode && companyId ? `?admin_mode=true&company_id=${companyId}` : ''}`
 
   return (
@@ -181,12 +239,35 @@ export default function CreatePaymentPage() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+            {/* Auto Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
-                Contract *
+                Auto
               </label>
               <select
-                required
+                value={autoId}
+                onChange={(e) => setAutoId(e.target.value)}
+                className="block w-full rounded-md border border-gray-200 text-sm py-2.5 px-3 bg-white text-gray-900 focus:ring-0 focus:border-gray-500 transition-colors"
+              >
+                <option value="">Select Auto</option>
+                {companyCars.map((car) => {
+                  const carName = `${car.car_templates?.car_brands?.name || ''} ${car.car_templates?.car_models?.name || ''}`.trim()
+                  return (
+                    <option key={car.id} value={car.id}>
+                      {car.license_plate} - {carName}
+                    </option>
+                  )
+                })}
+              </select>
+            </div>
+
+            {/* Contract Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">
+                Contract (Optional)
+              </label>
+              <select
                 value={contractId}
                 onChange={(e) => setContractId(e.target.value)}
                 className="block w-full rounded-md border border-gray-200 text-sm py-2.5 px-3 bg-white text-gray-900 focus:ring-0 focus:border-gray-500 transition-colors"
@@ -196,28 +277,55 @@ export default function CreatePaymentPage() {
                   const clientName = contract.client
                     ? `${contract.client.name} ${contract.client.surname}`.trim()
                     : 'Unknown'
-                  const carInfo = contract.company_cars?.car_templates
-                    ? `${contract.company_cars.car_templates.car_brands?.name || ''} ${contract.company_cars.car_templates.car_models?.name || ''}`.trim()
-                    : ''
                   return (
                     <option key={contract.id} value={contract.id}>
-                      #{contract.id} - {clientName} {carInfo ? `(${carInfo})` : ''} - {contract.total_amount} ฿
+                      #{contract.id} - {clientName} - {contract.total_amount}
                     </option>
                   )
                 })}
               </select>
-              {selectedContract && (
-                <div className="mt-2 p-3 bg-gray-50 rounded-md border border-gray-200">
-                  <p className="text-xs text-gray-600">
-                    <strong>Total amount:</strong> {selectedContract.total_amount} ฿
-                  </p>
-                </div>
-              )}
             </div>
 
+            {/* Payment Type */}
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
-                Payment Status *
+                Payment Type *
+              </label>
+              <select
+                required
+                value={paymentTypeId}
+                onChange={(e) => setPaymentTypeId(e.target.value)}
+                className="block w-full rounded-md border border-gray-200 text-sm py-2.5 px-3 bg-white text-gray-900 focus:ring-0 focus:border-gray-500 transition-colors"
+              >
+                <option value="">Select type</option>
+                {paymentTypes.map((type) => (
+                  <option key={type.id} value={type.id}>{type.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Method */}
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">
+                Method *
+              </label>
+              <select
+                required
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="block w-full rounded-md border border-gray-200 text-sm py-2.5 px-3 bg-white text-gray-900 focus:ring-0 focus:border-gray-500 transition-colors"
+              >
+                <option value="cash">Cash</option>
+                <option value="card">Card</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="online">Online</option>
+              </select>
+            </div>
+
+            {/* Status */}
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">
+                Status *
               </label>
               <select
                 required
@@ -228,12 +336,13 @@ export default function CreatePaymentPage() {
                 <option value="">Select status</option>
                 {paymentStatuses.map((status) => (
                   <option key={status.id} value={status.id}>
-                    {status.name} ({status.value === 1 ? '+' : status.value === -1 ? '-' : '0'}{Math.abs(status.value)})
+                    {status.name}
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* Amount */}
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
                 Amount *
@@ -250,35 +359,37 @@ export default function CreatePaymentPage() {
               />
             </div>
 
+            {/* Currency */}
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">
-                Payment Method *
+                Currency *
               </label>
               <select
                 required
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
+                value={currencyId}
+                onChange={(e) => setCurrencyId(e.target.value)}
                 className="block w-full rounded-md border border-gray-200 text-sm py-2.5 px-3 bg-white text-gray-900 focus:ring-0 focus:border-gray-500 transition-colors"
               >
-                <option value="cash">Cash</option>
-                <option value="card">Card</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="online">Online</option>
+                <option value="">Select currency</option>
+                {currencies.map(c => (
+                  <option key={c.id} value={c.id}>{c.code} ({c.symbol})</option>
+                ))}
               </select>
             </div>
 
-            <div className="lg:col-span-4">
-              <label className="block text-sm font-medium text-gray-500 mb-1">
-                Notes
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-                placeholder="Optional notes..."
-                className="block w-full rounded-md border border-gray-200 text-sm py-2.5 px-3 bg-white text-gray-900 focus:ring-0 focus:border-gray-500 transition-colors"
-              />
-            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-500 mb-1">
+              Notes
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              placeholder="Optional notes..."
+              className="block w-full rounded-md border border-gray-200 text-sm py-2.5 px-3 bg-white text-gray-900 focus:ring-0 focus:border-gray-500 transition-colors"
+            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">

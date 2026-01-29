@@ -26,6 +26,7 @@ export default function PaymentStatusesPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedStatus, setSelectedStatus] = useState<PaymentStatus | null>(null)
   const [editingStatus, setEditingStatus] = useState<PaymentStatus | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
   const toast = useToast()
 
   const handleCreate = () => {
@@ -66,7 +67,7 @@ export default function PaymentStatusesPage() {
         `Payment status ${status.is_active ? 'deactivated' : 'activated'} successfully`
       )
       setShowDetailsModal(false)
-      window.location.reload()
+      setRefreshKey(prev => prev + 1)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error updating payment status')
     }
@@ -85,10 +86,7 @@ export default function PaymentStatusesPage() {
 
       toast.success(`Payment status "${status.name}" deleted successfully`)
       setShowDetailsModal(false)
-      window.location.reload()
-      // Assuming there's a handleRefresh function or similar to update the data table
-      // For now, we'll just reload the page as a simple refresh mechanism
-      window.location.reload()
+      setRefreshKey(prev => prev + 1)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error deleting status')
     }
@@ -122,7 +120,7 @@ export default function PaymentStatusesPage() {
       )
       setShowForm(false)
       setEditingStatus(null)
-      window.location.reload()
+      setRefreshKey(prev => prev + 1)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error saving payment status')
     }
@@ -236,6 +234,7 @@ export default function PaymentStatusesPage() {
       <DataTable
         columns={columns}
         fetchData={fetchPaymentStatuses}
+        refreshKey={refreshKey}
       />
 
       {showForm && (

@@ -25,15 +25,15 @@ export default function Tabs({ tabs, activeTab, onTabChange, className = '', var
     if (!tabs || tabs.length === 0) return null
 
     return (
-        <div className={`flex space-x-1 bg-gray-200 p-1 rounded-full w-fit ${className}`}>
+        <div className={`flex space-x-1 bg-white/30 backdrop-blur-sm border border-white/40 p-1 rounded-full w-fit ${className}`}>
             {tabs.map((tab) => (
                 <button
                     type="button"
                     key={tab.id}
                     onClick={() => onTabChange(tab.id)}
                     className={`px-4 py-1.5 text-sm font-medium rounded-full transition-colors flex items-center gap-2 ${activeTab === tab.id
-                        ? 'text-white bg-gray-800 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-300'
+                        ? 'text-white bg-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-white/50'
                         }`}
                 >
                     {tab.icon && <span className="w-4 h-4">{tab.icon}</span>}

@@ -52,6 +52,7 @@ export default function CarTemplatesPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<CarTemplate | null>(null)
   const [editingTemplate, setEditingTemplate] = useState<CarTemplate | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
   const toast = useToast()
 
   const fetchBrands = async () => {
@@ -129,7 +130,7 @@ export default function CarTemplatesPage() {
 
       toast.success('Car template deleted successfully')
       setShowDetailsModal(false)
-      window.location.reload()
+      setRefreshKey(prev => prev + 1)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error deleting car template')
     }
@@ -161,7 +162,7 @@ export default function CarTemplatesPage() {
       )
       setShowForm(false)
       setEditingTemplate(null)
-      window.location.reload()
+      setRefreshKey(prev => prev + 1)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error saving car template')
     }
@@ -267,6 +268,7 @@ export default function CarTemplatesPage() {
       <DataTable
         columns={columns}
         fetchData={fetchCarTemplates}
+        refreshKey={refreshKey}
       />
 
       {showForm && (

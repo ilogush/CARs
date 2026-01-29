@@ -36,7 +36,7 @@ export default function Modal({ title, children, onClose, maxWidth, size, isOpen
   // ensuring the backdrop covers the entire screen including sidebar/topbar
   const content = (
     <div className="fixed inset-0 bg-white/50 backdrop-blur-xl flex items-center justify-center z-[9999]" onClick={onClose}>
-      <div className={`bg-gray-50 rounded-lg p-6 w-full ${maxWidthClasses[width]} shadow-xl max-h-[90vh] overflow-hidden flex flex-col`} onClick={(e) => e.stopPropagation()}>
+      <div className={`bg-white/40 backdrop-blur-md border border-white/50 rounded-lg p-6 w-full ${maxWidthClasses[width]} shadow-xl max-h-[90vh] overflow-hidden flex flex-col`} onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4 flex-shrink-0">
           <h2 className="text-xl font-semibold text-gray-900">
             {title}

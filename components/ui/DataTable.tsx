@@ -253,7 +253,7 @@ export default function DataTable<T>({
       )}
 
       {/* Table Section with perimeter border and radius */}
-      <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+      <div className="border border-gray-200 rounded-xl overflow-hidden bg-white/40 backdrop-blur-sm">
         <div className="overflow-x-auto sm:mx-0">
           <table className="min-w-full divide-y divide-gray-100 bg-transparent">
             <thead>

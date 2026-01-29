@@ -62,13 +62,27 @@ function PaymentsContent() {
       <PageHeader
         title={showActualPayments ? "Payments History" : "Payment Types"}
         rightActions={
-          !showActualPayments && (
+          !showActualPayments ? (
             <Button
               variant="primary"
               icon={<PlusIcon className="w-4 h-4" />}
               onClick={() => { window.dispatchEvent(new CustomEvent('open-payment-type-form')) }}
             >
               Create Type
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              icon={<PlusIcon className="w-4 h-4" />}
+              onClick={() => {
+                const params = new URLSearchParams()
+                if (adminMode) params.set('admin_mode', 'true')
+                const companyId = searchParams.get('company_id')
+                if (companyId) params.set('company_id', companyId)
+                window.location.href = `/dashboard/payments/create?${params.toString()}`
+              }}
+            >
+              Add
             </Button>
           )
         }

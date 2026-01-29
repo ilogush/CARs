@@ -792,10 +792,11 @@ export default function CarDetailsPage({ params }: { params: Promise<{ id: strin
           companyId={companyId}
           currentMileage={parseInt(mileage) || 0}
           onClose={() => setShowMaintenanceModal(false)}
-          onSuccess={() => {
+          onSuccess={async () => {
             setShowMaintenanceModal(false)
             // Reload data
-            window.location.reload()
+            await new Promise(resolve => setTimeout(resolve, 500))
+            router.refresh()
           }}
         />
       )}

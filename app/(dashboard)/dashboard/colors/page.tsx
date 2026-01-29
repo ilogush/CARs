@@ -23,6 +23,7 @@ export default function ColorsPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedColor, setSelectedColor] = useState<Color | null>(null)
   const [editingColor, setEditingColor] = useState<Color | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
   const toast = useToast()
 
   const handleCreate = () => {
@@ -54,7 +55,7 @@ export default function ColorsPage() {
 
       toast.success(`Color "${color.name}" deleted successfully`)
       setShowDetailsModal(false)
-      window.location.reload()
+      setRefreshKey(prev => prev + 1)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error deleting color')
     }
@@ -88,7 +89,7 @@ export default function ColorsPage() {
       )
       setShowForm(false)
       setEditingColor(null)
-      window.location.reload()
+      setRefreshKey(prev => prev + 1)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Error saving color')
     }
@@ -179,6 +180,7 @@ export default function ColorsPage() {
       <DataTable
         columns={columns}
         fetchData={fetchColors}
+        refreshKey={refreshKey}
       />
 
       {showForm && (

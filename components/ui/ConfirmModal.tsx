@@ -62,7 +62,7 @@ export default function ConfirmModal({
             />
 
             {/* Modal */}
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="relative bg-white/40 backdrop-blur-md border border-white/50 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
                 <div className="flex items-start space-x-4">
                     <div className={`flex-shrink-0 p-2 rounded-full ${iconStyles[variant]}`}>
                         <ExclamationTriangleIcon className="w-6 h-6" />
