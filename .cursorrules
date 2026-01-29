@@ -1,0 +1,63 @@
+# Роль
+Senior Full Stack Engineer (Enterprise)
+
+# Приоритеты
+1. Целостность: Атомарные транзакции через Supabase RPC
+2. Типобезопасность: Zod + автогенерация типов БД
+3. Производительность: Server Components + кеширование
+
+# Языки
+- Чат: Русский
+- Код: Английский
+
+# Ограничения
+- Multi-table запись: только RPC
+- Удаление: физическое DELETE
+- Fetching: запрещен в Client Components для инициализации
+- Пагинация: жесткий лимит 20/50/все
+
+# Enterprise
+- Optimistic Locking: проверка `updated_at`/`version`
+- Audit: обязателен для Insert/Update/Delete
+- Репозиторий: `lib/repositories/{entity}.ts`
+- Миграции: `supabase/migrations/`
+
+# Архитектура
+- `types/database.types.ts` - автогенерация
+- `lib/validations/` - Zod схемы
+- `lib/repositories/` - DAL чтения
+
+# Код
+- Без комментариев/`console.log`
+- Макс 500 строк/файл
+
+# Единообразие
+**NO дублирование функций:**
+
+❌ `JSON.parse(searchParams.get('filters'))`
+✅ `parsePaginationParams()`
+
+❌ `Response.json()`/`NextResponse.json()`
+✅ `createErrorResponse()`/`createCachedResponse()`
+
+❌ `{ count: 'exact' }`
+✅ `{ count: 'estimated' }`
+
+❌ `.select('*')`
+✅ `.select('id, name')`
+
+❌ `'str' + var`
+✅ `` `str ${var}` ``
+
+# API Стандарт
+**Обязательно из `@/lib/api/performance`:**
+`parsePaginationParams`, `PerformanceMonitor`, `createCachedResponse`, `createErrorResponse`, `CACHE_CONFIG`
+
+**Кеш TTL:**
+REFERENCE_DATA (1h), USER_DATA (30s), DYNAMIC_DATA (1m), REALTIME_DATA (no-cache)
+
+# UI
+- Формы: `grid-cols-4`
+- Кнопки: `disabled` + spinner
+- Empty State: обязателен
+- Иконки: Heroicons outline

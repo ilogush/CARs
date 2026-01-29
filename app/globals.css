@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #ffffff;
+    --foreground: #171717;
+  }
+}
+
+body {
+  background: #ffffff;
+  color: #171717;
+}
+
+html {
+  background: #ffffff;
+}
+
+@layer utilities {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #e5e7eb;
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #d1d5db;
+  }
+
+  /* Animation utilities for smooth transitions */
+  .animate-in {
+    animation-name: animate-in;
+    animation-duration: 300ms;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+  }
+
+  .fade-in {
+    --tw-enter-opacity: 0;
+  }
+
+  .slide-in-from-bottom-2 {
+    --tw-enter-translate-y: 0.5rem;
+  }
+
+  .slide-in-from-top-1 {
+    --tw-enter-translate-y: -0.25rem;
+  }
+
+  .duration-300 {
+    animation-duration: 300ms;
+  }
+
+  .duration-200 {
+    animation-duration: 200ms;
+  }
+
+  @keyframes animate-in {
+    from {
+      opacity: var(--tw-enter-opacity, 1);
+      transform: translate3d(var(--tw-enter-translate-x, 0), var(--tw-enter-translate-y, 0), 0) scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), var(--tw-enter-scale, 1)) rotate(var(--tw-enter-rotate, 0));
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+    background-size: 200% 100%;
+  }
+
+  /* Loading bar animation */
+  @keyframes loader-fill {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    50% {
+      transform: translateX(0%);
+    }
+
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-loader-fill {
+    animation: loader-fill 1.5s infinite linear;
+    width: 30%;
+    /* Set a fixed width for the moving bar */
+  }
+}
+
+/* Global Typography */
+h1 {
+  @apply text-lg font-semibold tracking-tight text-gray-900;
+}
+
+h2 {
+  @apply text-base font-semibold tracking-tight text-gray-900;
+}
+
+h3 {
+  @apply text-sm font-semibold text-gray-900;
+}
+
+/* Base table styles for custom tables */
+table {
+  @apply w-full border-collapse;
+}
+
+thead th {
+  @apply text-[11px] font-semibold text-gray-500 lowercase tracking-wider text-left;
+}
+
+tbody td {
+  @apply text-sm font-medium text-gray-900;
+}
+
+/* Global Input Styles */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  background-color: #ffffff !important;
+  @apply border-gray-200 rounded-lg focus:ring-1 focus:ring-gray-400 transition-all;
+}
